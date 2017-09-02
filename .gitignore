@@ -3,3 +3,8 @@
 
 # Node
 node_modules/
+
+# Project Files
+index.html
+assets/
+resources/
