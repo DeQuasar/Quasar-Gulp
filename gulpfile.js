@@ -45,7 +45,7 @@ const imageOutput = 'assets/images';
     Index.html file location
 */
 
-const htmlLocation = '.';
+const htmlLocation = './';
 
 /*
     Set the sassOptions
@@ -133,9 +133,11 @@ gulp.task('watch', function() {
         // Run Images First
         gulp.watch(imageInput, ['images']);
 
-        // Watches SCSS and HTML file changes, runs concat which compiles scss first then creates the bundle.min.css file, then reloads browser
-        gulp.watch([resourceInput, htmlLocation + '/*.html'], ['concat']).on('finish', browserSync.reload);
+        // Watches SCSS changes, runs concat which compiles scss first then creates the bundle.min.css file, then reloads browser
+        gulp.watch([resourceInput], ['concat']).on('finish', browserSync.reload);
 
+        // Watches for HTML file changes, reloads browser
+        gulp.watch(["*.html"]).on('change', browserSync.reload);
 });
 
 /*
