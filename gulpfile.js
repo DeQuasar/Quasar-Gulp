@@ -118,6 +118,8 @@ gulp.task('images', function() {
 });
 
 /*
+ Gulp watch
+
  Gulp file watcher task to run images, scss, concat tasks, and auto-reloading with browser-sync.
  */
 
