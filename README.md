@@ -12,7 +12,9 @@ NPM Modules
 * Autoprefixer
 * Concat CSS
 * Clean CSS
+* Imagemin
 * Sourcemaps
+* BrowserSync
 
 Usage Instructions
 ---
@@ -76,7 +78,7 @@ const imageOutput = 'assets/images';
 
 ##### HTML File Location
 
-> This is the location of the entry point for the browser-sync gulp plugin.
+> This is the location of the entry point for the BrowserSync gulp plugin.
 
 ```javascript
 const htmlLocation = '.';
