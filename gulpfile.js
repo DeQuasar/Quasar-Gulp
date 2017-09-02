@@ -7,7 +7,9 @@ const sass         = require("gulp-sass");
 const autoprefixer = require("gulp-autoprefixer");
 const concat       = require("gulp-concat-css");
 const cleanCSS     = require("gulp-clean-css");
-const sourceMaps   = require("gulp-sourcemaps");
+const imagemin     = require("gulp-imagemin");
+const sourcemaps   = require("gulp-sourcemaps");
+const browserSync  = require("browser-sync").create();
 
 /*
     Set resource Input directory and Output Directory
@@ -28,10 +30,22 @@ const resourceOutput = 'resources/stylesheets';
 const minifiedOutput = 'assets/stylesheets';
 
 /*
-    Set the sourcemaps output folder -
+    Set the images input folder
 */
 
-const sourcemapsOutput = 'resources/sourcemaps';
+const imageInput = 'resources/images/*';
+
+/*
+    Set the minified images output folder
+*/
+
+const imageOutput = 'assets/images';
+
+/*
+    Index.html file location
+*/
+
+const htmlLocation = '.';
 
 /*
     Set the sassOptions
@@ -52,23 +66,23 @@ const sassOptions = {
 */
 
 const autoprefixerOptions = {
-    browsers: ['last 2 versions', '> 5%', 'Firefox ESR']
+    browsers: ['last 2 versions'],
+    cascade:  false,
+    grid:     true
 };
 
 /*
     Gulp SCSS task
 
-    Grabs scss files from resourcesInput folder, pipe sourcemaps to destination folder, pipes scss it through the autoprefixer then sends it to
+    Grabs scss files from resourcesInput folder, pipes scss it through the autoprefixer then sends it to
     the destination folder
 */
 
-gulp.task('sass', function () {
+gulp.task('scss', function () {
     return gulp
         .src(resourceInput)
-        .pipe(sourcemaps.init())
-        .pipe(sass(sassOptions).on('error', sass.logError))
-        .pipe(sourcemaps.write(sourcemapsOutput))
-        .pipe(autoprefixer(autoprefixerOptions))
+            .pipe(sass(sassOptions).on('error', sass.logError))
+            .pipe(autoprefixer(autoprefixerOptions))
         .pipe(gulp.dest(resourceOutput));
 });
 
@@ -76,33 +90,56 @@ gulp.task('sass', function () {
     Gulp concat task
 
     Grabs all of the css files in the resource output folder, combines them, and then minifys them and sends them
-    to the production assets folder
+    to the production assets folder with source maps
 */
 
-gulp.task('concat', ['sass'], function() {
+gulp.task('concat', ['scss'], function() {
     return gulp
         .src(resourceOutput + '/*.css')
-        .pipe(concat('bundle.min.css'))
-        .pipe(cleanCSS({compatibility: 'ie8'}))
-        .pipe(gulp.dest(minifiedOutput));
+            .pipe(concat('bundle.min.css'))
+            .pipe(sourcemaps.init())
+            .pipe(cleanCSS({compatibility: 'ie8'}))
+            .pipe(sourcemaps.write('.'))
+            .pipe(gulp.dest(minifiedOutput))
+        .pipe(browserSync.stream());
 });
 
 /*
-    Gulp file watcher task to re-run Gulp Sass and Gulp Concat tasks
+    Gulp Imagemin
+
+    Minifies all of the images in the resources/images folder and pipes them to the assets/images folder
 */
 
+gulp.task('images', function() {
+   return gulp
+       .src(imageInput)
+           .pipe(imagemin({ optimizationLevel: 7 }))
+       .pipe(gulp.dest(imageOutput));
+});
+
+/*
+ Gulp file watcher task to run images, scss, concat tasks, and auto-reloading with browser-sync.
+ */
+
 gulp.task('watch', function() {
-    return gulp
-        .watch(resourceInput, ['concat'])
-        .on('change', function(event) {
-            console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
+
+        // Browser Sync Init
+        browserSync.init({
+            server: htmlLocation
         });
+
+        // Run Images First
+        gulp.watch(imageInput, ['images']);
+
+        // Watches SCSS and HTML file changes, runs concat which compiles scss first then creates the bundle.min.css file, then reloads browser
+        gulp.watch([resourceInput, htmlLocation + '/*.html'], ['concat']).on('finish', browserSync.reload);
+
 });
 
 /*
     Gulp Default
 
-    Default task that is ran
+    Default task that is ran on gulp start
 */
 
 gulp.task('default', ['watch']);
